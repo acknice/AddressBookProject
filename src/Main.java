@@ -19,12 +19,12 @@ public class Main
 	@SuppressWarnings("unchecked")
 	static ArrayList<Contact> loadBook()
 	{
-		ArrayList<Contact> book = new ArrayList<Contact>();
+		ArrayList<Contact> addressBook = new ArrayList<Contact>();
 		try
 		{
 			FileInputStream fileIn = new FileInputStream("src/saved_books/my_address_book.ser");
 			ObjectInputStream in = new ObjectInputStream(fileIn);
-			book = (ArrayList<Contact>) in.readObject();
+			addressBook = (ArrayList<Contact>) in.readObject();
 			in.close();
 			fileIn.close();
 			System.out.println("Your address book has loaded successfully.");
@@ -37,17 +37,17 @@ public class Main
 		{
 			System.out.println("Address book could not be loaded due to a serialization error.");
 		}
-		return book;
+		return addressBook;
 		
 	}
 	
-	static void saveBook(ArrayList<Contact> book)
+	static void saveBook(ArrayList<Contact> addressBook)
 	{
 		try
 		{
 			FileOutputStream fileOut = new FileOutputStream("src/saved_books/my_address_book.ser");
 			ObjectOutputStream out = new ObjectOutputStream(fileOut);
-			out.writeObject(book);
+			out.writeObject(addressBook);
 			out.close();
 			fileOut.close();
 			System.out.println("Your address book has been saved successfully.") ;
@@ -60,15 +60,18 @@ public class Main
 		
 	}
 	
-	static void printBook(ArrayList<Contact> book)
+	static void printBook(ArrayList<Contact> addressBook)
 	{
-		book.forEach(Contact -> {System.out.println(Contact.toString());});
+		addressBook.forEach(Contact -> {System.out.println(Contact.toString());});
 	}
 	
-	static void findEntry(ArrayList<Contact> book)
+	static int findEntry(ArrayList<Contact> addressBook)
 	{	
+		ArrayList<Integer> resultList = new ArrayList<Integer>();
+		int searchResult = -1;
+		
 		System.out.println("How would you like to search for a contact?\n");
-		System.out.print
+		System.out.println
 			(
 				"Options:\n"
 				+ "1) First Name\n"
@@ -78,76 +81,80 @@ public class Main
 			);
 		System.out.println("\n");
 		System.out.println("Please provide a selection (1-4):");
-		int searchOption =  input.nextInt();
-		input.nextLine();
-		String searched;
-		ArrayList<Integer> resultList = new ArrayList<Integer>();
-		switch (searchOption)
-		{
-			case 1:
-				System.out.println("Please provide the first name of the contact you would like to find:");
-				searched = input.nextLine();
-				resultList = Search.firstNameSearch(book, searched);
-				if (resultList.isEmpty() == false)
-				{
-					System.out.println("Entry found!\n");
-					for (int i=0; i < resultList.size(); i++)
-					{
-						System.out.println((book.get(resultList.get(i))).toString());
-					}
-				}
-				else System.out.println("Sorry, no entry was found with that first name.\n");
-				break;
-			case 2:
-				System.out.println("Please provide the last name of the contact you would like to find:");
-				searched = input.nextLine();
-				resultList = Search.lastNameSearch(book, searched);
-				if (resultList.isEmpty() == false)
-				{
-					System.out.println("Entry found!\n");
-					for (int i=0; i < resultList.size(); i++)
-					{
-						System.out.println((book.get(resultList.get(i))).toString());
-					}
-				}
-				else System.out.println("Sorry, no entry was found with that last name.\n");
-				break;
-			case 3:
-				System.out.println("Please provide the phone number of the contact you would like to find:");
-				searched = input.nextLine();
-				resultList = Search.phoneSearch(book, searched);
-				if (resultList.isEmpty() == false)
-				{
-					System.out.println("Entry found!\n");
-					for (int i=0; i < resultList.size(); i++)
-					{
-						System.out.println((book.get(resultList.get(i))).toString());
-					}
-				}
-				else System.out.println("Sorry, no entry was found with that phone number.\n");
-				break;
-			case 4:
-				System.out.println("Please provide the email of the contact you would like to find:");
-				searched = input.nextLine();
-				resultList = Search.emailSearch(book, searched);
-				if (resultList.isEmpty() == false)
-				{
-					System.out.println("Entry found!\n");
-					for (int i=0; i < resultList.size(); i++)
-					{
-						System.out.println((book.get(resultList.get(i))).toString());
-					}
-				}
-				else System.out.println("Sorry, no entry was found with that email address.\n");
-				break;
-			default:
-				System.out.println("Invalid option.");
-				break;
-		}	
 		
+		int searchOption = 0;
+		while (searchOption == 0)
+		{
+			try 
+			{
+				searchOption = input.nextInt();
+			}
+			catch (InputMismatchException e)
+			{
+				searchOption = 0;
+			}
+			input.nextLine();	
+
+			switch (searchOption)
+			{
+				case 1:
+					resultList = Search.firstNameSearch(addressBook);
+					break;
+				case 2:
+					resultList = Search.lastNameSearch(addressBook);
+					break;
+				case 3:
+					resultList = Search.phoneSearch(addressBook);
+					break;
+				case 4:
+					resultList = Search.emailSearch(addressBook);
+					break;
+				default:
+					System.out.println("Invalid input, please try again.");
+					break;
+			}
+		}
+		if (resultList.isEmpty() == false)
+		{
+			System.out.println("The below entries were found matching your search:\n");
+			for (int i=0; i < resultList.size(); i++)
+			{
+				System.out.println("Entry " + (i+1) + ":\n" + (addressBook.get(resultList.get(i))).toString());
+			}
+				System.out.println("Please select the desired entry (1-" + resultList.size() +"). If none of these is the entry you were looking for, please enter 0.\n");
+				int selection = -1;
+				while (selection == -1)
+				{
+					try 
+					{
+						selection = input.nextInt();
+					}
+					catch (InputMismatchException e)
+					{
+						System.out.println("Invalid input, please try again.");
+						selection = -1;
+					}
+					input.nextLine();
+					
+					if (selection > resultList.size())
+					{
+						System.out.println("Invalid input, please try again.");
+						selection = -1;
+					}
+					else if (selection == 0)
+					{
+						System.out.println("Sorry we couldn't find what you were looking for.\n");
+					}
+				}
+				if (selection == 0) searchResult = -1;
+				else searchResult = resultList.get(selection - 1);	
+		}
+		else System.out.println("Sorry, no matching entry was found.\n");
+		
+		return searchResult;
 	}
 
-	static void addEntry(ArrayList<Contact> book)
+	static void addEntry(ArrayList<Contact> addressBook)
 	{
 		System.out.println("Please provide a first name:");
 		String newFirstName = input.nextLine();
@@ -159,7 +166,7 @@ public class Main
 		String newEmail = input.nextLine();
 		boolean unique;
 		ArrayList<Integer> dupeCheck = new ArrayList<Integer>();
-		dupeCheck = Search.emailSearch(book, newEmail);
+		dupeCheck = Search.emailCheck(addressBook, newEmail);
 		if (dupeCheck.isEmpty() == true)
 		{
 			unique = true;
@@ -169,7 +176,7 @@ public class Main
 		{
 			System.out.println("Each entry must have a unique email address. \n Please provide a unique email address:");
 			newEmail = input.nextLine();
-			dupeCheck = Search.emailSearch(book, newEmail);
+			dupeCheck = Search.emailCheck(addressBook, newEmail);
 			if (dupeCheck.isEmpty() == true)
 			{
 				unique = true;
@@ -177,192 +184,117 @@ public class Main
 		}
 		Contact newContact = new Contact(newFirstName, newLastName, newPhone, newEmail);//, newFavorite);
 		System.out.println("\nA new contact has been added with the details below:\n" + newContact.toString());
-		book.add(newContact);
+		addressBook.add(newContact);
 	}
 	
-	static void editEntry(ArrayList<Contact> book)
+	static void editEntry(ArrayList<Contact> addressBook, int editIndex)
 	{
-		System.out.println("Please provide the email of the contact you would like to update:");
-		String searched = input.nextLine();
-		ArrayList<Integer> resultList = new ArrayList<Integer>();
-		resultList = Search.emailSearch(book, searched);
-		if (resultList.isEmpty() == false)
+		System.out.println("Which field would you like to update?\n");
+		System.out.print
+			(	
+			"Options:\n"
+			+ "1) First Name\n"
+			+ "2) Last Name\n"
+			+ "3) Phone\n"
+			+ "4) Email\n"
+			);
+		System.out.println("\n");
+		System.out.println("Please provide a selection (1-4):");
+		int fieldOption = 0;
+		while (fieldOption == 0)
 		{
-			int toEdit=-1;
-			boolean confirmed = false;
-			while (confirmed == false)
+			try 
 			{
-				for(int i=0; i < resultList.size(); i++)
-				{
-					System.out.println("Would you like to update this entry?\n");
-					System.out.println((book.get(resultList.get(i))).toString());
-					System.out.println("Please input Y or yes to confirm selection:"); 
-					String confirmation = input.nextLine();
-					switch (confirmation)
-					{
-						case "Y":
-							toEdit = resultList.get(i);
-							confirmed = true;
-							break;
-						case "y":
-							toEdit = resultList.get(i);
-							confirmed = true;
-							break;
-						case "Yes":
-							toEdit = resultList.get(i);
-							confirmed = true;
-							break;
-						case "yes":
-							toEdit = resultList.get(i);
-							confirmed = true;
-							break;
-						default:
-							confirmed = false;
-							break;
-					}
-					if (confirmed == true) break;
-				}
-				
-				if (confirmed == false)
-				{
-					System.out.println("End of matches. Update canceled. \n");
-					confirmed = true;
-				}
-				
-				else 
-				{
-					System.out.println("Which field would you like to update?\n");
-					System.out.print
-						(	
-						"Options:\n"
-						+ "1) First Name\n"
-						+ "2) Last Name\n"
-						+ "3) Phone\n"
-						+ "4) Email\n"
-						);
-					System.out.println("\n");
-					System.out.println("Please provide a selection (1-4):");
-					int fieldOption =  input.nextInt();
-					input.nextLine();
-					
-					switch (fieldOption)
-					{
-						case 1:
-							System.out.println("Please provide the new first name of the contact:");
-							String newFirstName = input.nextLine();
-							book.get(toEdit).setFirstName(newFirstName);
-							break;
-						case 2:
-							System.out.println("Please provide the new last name of the contact:");
-							String newLastName = input.nextLine();
-							book.get(toEdit).setLastName(newLastName);
-							break;
-						case 3:
-							System.out.println("Please provide the new phone number of the contact:");
-							String newPhone = input.nextLine();
-							book.get(toEdit).setPhone(newPhone);
-							break;
-						case 4:
-							System.out.println("Please provide the new email address of the contact:");
-							String newEmail = input.nextLine();
-							ArrayList<Integer> dupeCheck = new ArrayList<Integer>();
-							boolean unique;
-							dupeCheck = Search.emailSearch(book, newEmail);
-							if (dupeCheck.isEmpty() == true)
-							{
-								unique = true;
-							}
-							else unique = false;
-							while (unique == false)
-							{
-								System.out.println("Each entry must have a unique email address. \n Please provide a unique email address:");
-								newEmail = input.nextLine();
-								dupeCheck = Search.emailSearch(book, newEmail);
-								if (dupeCheck.isEmpty() == true)
-								{
-									unique = true;
-								}
-							}
-							book.get(toEdit).setEmail(newEmail);
-							break;
-						default:
-							System.out.println("Invalid option.");
-							break;
-					}
-					System.out.println("Your entry has been updated:\n");
-					System.out.println((book.get(toEdit)).toString());
-					
-				}
-				
+				fieldOption = input.nextInt();
 			}
-			
+			catch (InputMismatchException e)
+			{
+				fieldOption = 0;
+			}
+			input.nextLine();	
+
+			switch (fieldOption)
+			{
+				case 1:
+					System.out.println("Please provide the new first name of the contact:");
+					String newFirstName = input.nextLine();
+					addressBook.get(editIndex).setFirstName(newFirstName);
+					break;
+				case 2:
+					System.out.println("Please provide the new last name of the contact:");
+					String newLastName = input.nextLine();
+					addressBook.get(editIndex).setLastName(newLastName);
+					break;
+				case 3:
+					System.out.println("Please provide the new phone number of the contact:");
+					String newPhone = input.nextLine();
+					addressBook.get(editIndex).setPhone(newPhone);
+					break;
+				case 4:
+					System.out.println("Please provide the new email address of the contact:");
+					String newEmail = input.nextLine();
+					ArrayList<Integer> dupeCheck = new ArrayList<Integer>();
+					boolean unique;
+					dupeCheck = Search.emailCheck(addressBook, newEmail);
+					if (dupeCheck.isEmpty() == true)
+					{
+						unique = true;
+					}
+					else unique = false;
+					while (unique == false)
+					{
+						System.out.println("Each entry must have a unique email address. \n Please provide a unique email address:");
+						newEmail = input.nextLine();
+						dupeCheck = Search.emailCheck(addressBook, newEmail);
+						if (dupeCheck.isEmpty() == true)
+						{
+							unique = true;
+						}
+					}
+					addressBook.get(editIndex).setEmail(newEmail);
+					break;
+				default:
+					System.out.println("Invalid option.");
+					break;
+			}
 		}
-		else System.out.println("Sorry, no entry was found with that email address.\n");
-	
+		System.out.println("Your entry has been updated:\n");
+		System.out.println((addressBook.get(editIndex)).toString());
 	}
-	
-	static void deleteEntry(ArrayList<Contact> book)
+					
+	static void deleteEntry(ArrayList<Contact> addressBook, int deleteIndex)
 	{
-		System.out.println("Please provide the email of the contact you would like to delete:");
-		String searched = input.nextLine();
-		ArrayList<Integer> resultList = new ArrayList<Integer>();
-		resultList = Search.emailSearch(book, searched);
-		if (resultList.isEmpty() == false)
+		System.out.println("Are you sure you want to delete this entry?\n");
+		System.out.println("Please input Y or yes to confirm deletion:"); 
+		String confirmation = input.nextLine();
+		boolean confirmed = false;
+		switch (confirmation)
 		{
-			boolean confirmed = false;
-			while (confirmed == false)
-			{
-				for(int i=0; i < resultList.size(); i++)
-				{
-					System.out.println("Would you like to delete this entry?\n");
-					System.out.println((book.get(resultList.get(i))).toString());
-					System.out.println("Please input Y or yes to confirm deletion:"); 
-					String confirmation = input.nextLine();
-					int toDelete;
-					switch (confirmation)
-					{
-						case "Y":
-							toDelete = resultList.get(i);
-							book.remove(toDelete);
-							System.out.println("Entry deleted. \n");
-							confirmed = true;
-							break;
-						case "y":
-							toDelete = resultList.get(i);
-							book.remove(toDelete);
-							System.out.println("Entry deleted. \n");
-							confirmed = true;
-							break;
-						case "Yes":
-							toDelete = resultList.get(i);
-							book.remove(toDelete);
-							System.out.println("Entry deleted. \n");
-							confirmed = true;
-							break;
-						case "yes":
-							toDelete = resultList.get(i);
-							book.remove(toDelete);
-							System.out.println("Entry deleted. \n");
-							confirmed = true;
-							break;
-						default:
-							confirmed = false;
-							break;
-					}
-					if (confirmed == true) break;
-				}
-				if (confirmed == false)
-				{
-					System.out.println("End of matches. Deletion canceled. \n");
-					confirmed = true;
-				}
-			}
-			
+			case "Y":
+				confirmed = true;
+				break;
+			case "y":
+				confirmed = true;
+				break;
+			case "Yes":
+				confirmed = true;
+				break;
+			case "yes":
+				confirmed = true;
+				break;
+			default:
+				break;
 		}
-		else System.out.println("Sorry, no entry was found with that email address.\n");
+		if (confirmed == true) 
+		{
+			addressBook.remove(deleteIndex);
+			System.out.println("Entry deleted. \n");
+		}
+		else System.out.println("Deletion canceled.\n");
 	}
-	
+				
 	static void deleteBook(ArrayList<Contact> book)
+
 	{
 		System.out.println("This will delete all entries in the book. Are you sure? (Y to confirm)\n");
 		System.out.println("Please input Y or yes to confirm deletion:"); 
@@ -394,6 +326,8 @@ public class Main
 		else System.out.println("Deletion canceled. \n");
 	}
 	
+		
+		
 	public static void main(String[] args) 
 	{
 		
@@ -405,19 +339,17 @@ public class Main
 		while (isRunning == true)  															
 		{
 			System.out.println("What would you like to do?\n");								
-			System.out.print
+			System.out.println
 				(
 					"Options:\n"
 					+ "1) View your Address Book\n"
-					+ "2) Search for an entry\n"
+					+ "2) Find an entry\n"
 					+ "3) Add a new entry\n"
-					+ "4) Update an entry\n"
-					+ "5) Delete an entry\n"
-					+ "6) Delete your address book\n"
-					+ "7) Quit program\n"
+					+ "4) Delete your address book\n"
+					+ "5) Quit program\n"
 				);
 			System.out.println("\n");
-			System.out.println("Please provide a selection (1-7):");
+			System.out.println("Please provide a selection (1-5):");
 			
 			int option = 0;
 			
@@ -445,8 +377,51 @@ public class Main
 					if (AddressBook.isEmpty() == true) System.out.println("Your address book is currently empty.\n");
 					else
 					{
-						System.out.println("Who are you trying to find?\n");
-						findEntry(AddressBook);
+						System.out.println("Sure thing!\n");
+						int searchResult = findEntry(AddressBook);
+						if (searchResult != -1)
+						{
+							System.out.println("What would you like to do with this entry?\n");
+							System.out.println(AddressBook.get(searchResult));
+							System.out.println
+								(
+									"Options:\n"
+									+ "1) Update this entry\n"
+									+ "2) Delete this entry\n"
+									+ "3) Nothing\n"
+								);
+							System.out.println("\n");
+							System.out.println("Please provide a selection (1-3):");
+							
+							int searchAction = 0;
+							while (searchAction == 0)
+							{
+								try
+								{
+									searchAction = input.nextInt();													
+								}
+								catch (InputMismatchException e)
+								{
+									searchAction = 0;
+								}
+								input.nextLine();
+								
+								switch (searchAction)
+								{
+									case 1:
+										editEntry(AddressBook, searchResult);
+										break;
+									case 2:
+										deleteEntry(AddressBook, searchResult);
+										break;
+									case 3:
+										break;
+									default:
+										System.out.println("Invalid option, please try again");
+										break;
+								}
+							}	
+						}
 					}
 					break;
 				case 3:
@@ -454,22 +429,6 @@ public class Main
 					addEntry(AddressBook);
 					break;
 				case 4:
-					if (AddressBook.isEmpty() == true) System.out.println("Your address book is empty, there are no entries to update.\n");
-					else
-					{
-						System.out.println("Sure! Which entry would you like to edit?\n");
-						editEntry(AddressBook);
-					}
-					break;
-				case 5:
-					if (AddressBook.isEmpty() == true) System.out.println("Your address book is empty, there are no entries to delete.\n");
-					else
-					{
-						System.out.println("Which entry are you trying to remove?\n");
-						deleteEntry(AddressBook);
-					}
-					break;
-				case 6:
 					if (AddressBook.isEmpty() == true) System.out.println("Your address book is empty, there is nothing to delete.\n");
 					else
 					{
@@ -477,7 +436,7 @@ public class Main
 						deleteBook(AddressBook);
 					}
 					break;
-				case 7:
+				case 5:
 					saveBook(AddressBook);
 					System.out.println("Goodbye!\n");
 					isRunning = false;
